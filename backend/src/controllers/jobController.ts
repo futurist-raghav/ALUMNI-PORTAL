@@ -109,12 +109,12 @@ export const getJobs = asyncHandler(async (req: AuthenticatedRequest, res: Respo
   const where: any = {};
   
   if (isActive !== 'all') where.isActive = isActive === 'true';
-  if (type) where.type = type as string;
-  if (location) where.location = { contains: location as string, mode: 'insensitive' };
-  if (company) where.company = { contains: company as string, mode: 'insensitive' };
-  if (postedBy) where.postedById = postedBy as string;
+  if (type) where.type = String(type);
+  if (location) where.location = { contains: String(location), mode: 'insensitive' };
+  if (company) where.company = { contains: String(company), mode: 'insensitive' };
+  if (postedBy) where.postedById = String(postedBy);
   if (tags) {
-    const tagArray = (tags as string).split(',').map(tag => tag.trim());
+    const tagArray = String(tags).split(',').map(tag => tag.trim());
     where.tags = { hasSome: tagArray };
   }
 
@@ -143,7 +143,7 @@ export const getJobs = asyncHandler(async (req: AuthenticatedRequest, res: Respo
 });
 
 export const getJobById = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
-  const { id } = req.params;
+  const id = String(req.params.id || '');
   if (!id) {
     res.status(400).json({ success: false, message: 'Job ID is required' });
     return;
@@ -206,7 +206,7 @@ export const createJob = asyncHandler(async (req: AuthenticatedRequest, res: Res
 });
 
 export const updateJob = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
-  const { id } = req.params;
+  const id = String(req.params.id || '');
   if (!id) {
     res.status(400).json({ success: false, message: 'Job ID is required' });
     return;
@@ -261,7 +261,7 @@ export const updateJob = asyncHandler(async (req: AuthenticatedRequest, res: Res
 });
 
 export const deleteJob = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
-  const { id } = req.params;
+  const id = String(req.params.id || '');
   if (!id) {
     res.status(400).json({ success: false, message: 'Job ID is required' });
     return;
@@ -289,7 +289,7 @@ export const saveJob = asyncHandler(async (req: AuthenticatedRequest, res: Respo
     res.status(401).json({ success: false, message: 'Not authenticated' });
     return;
   }
-  const { id } = req.params;
+  const id = String(req.params.id || '');
   if (!id) {
     res.status(400).json({ success: false, message: 'Job ID is required' });
     return;
@@ -319,7 +319,7 @@ export const unsaveJob = asyncHandler(async (req: AuthenticatedRequest, res: Res
     return;
   }
 
-  const { id } = req.params;
+  const id = String(req.params.id || '');
   if (!id) {
     res.status(400).json({ success: false, message: 'Job ID is required' });
     return;
@@ -450,7 +450,7 @@ export const toggleSaveJob = asyncHandler(async (req: AuthenticatedRequest, res:
     return;
   }
 
-  const { id } = req.params;
+  const id = String(req.params.id || '');
   if (!id) {
     res.status(400).json({ success: false, message: 'Job ID is required' });
     return;
@@ -506,7 +506,7 @@ export const incrementApplicationCount = asyncHandler(async (req: AuthenticatedR
     return;
   }
 
-  const { id } = req.params;
+  const id = String(req.params.id || '');
   if (!id) {
     res.status(400).json({ success: false, message: 'Job ID is required' });
     return;
@@ -647,7 +647,7 @@ export const getJobApplications = asyncHandler(async (req: AuthenticatedRequest,
     return;
   }
 
-  const { id } = req.params;
+  const id = String(req.params.id || '');
   if (!id) {
     res.status(400).json({ success: false, message: 'Job ID is required' });
     return;
