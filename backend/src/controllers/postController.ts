@@ -679,6 +679,16 @@ export const getSchoolUpdates = asyncHandler(async (req: Request, res: Response)
 });
 
 export const toggleFeaturePost = asyncHandler(async (req: AuthRequest, res: Response) => {
+  if (!req.user) {
+    res.status(401).json({ success: false, message: 'Not authenticated' });
+    return;
+  }
+
+  if (!isAdminRole(req.user.role)) {
+    res.status(403).json({ success: false, message: 'Not authorized' });
+    return;
+  }
+
   const { postId } = req.params;
   if (!postId) {
     res.status(400).json({ success: false, message: 'Post ID is required' });
