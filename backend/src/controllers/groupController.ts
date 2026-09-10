@@ -132,8 +132,26 @@ const getNextAdminCandidateId = async (
 
 export const createGroup = asyncHandler(async (req: AuthRequest, res: Response): Promise<void> => {
   if (!req.user?.id) { res.status(401).json({ message: 'Not authenticated' }); return; }
+
+  const name = typeof req.body?.name === 'string' ? req.body.name.trim() : '';
+  const description = typeof req.body?.description === 'string' ? req.body.description.trim() : '';
+  const privacy = req.body?.privacy === 'private' ? 'private' : 'public';
+  const category = typeof req.body?.category === 'string' ? req.body.category.trim() : 'professional';
+
+  if (!name) {
+    res.status(400).json({ message: 'Group name is required' });
+    return;
+  }
+
   const group = await prisma.group.create({
-    data: { ...req.body, creatorId: req.user.id, members: { connect: { id: req.user.id } } },
+    data: {
+      name,
+      description,
+      privacy,
+      category: category || 'professional',
+      creatorId: req.user.id,
+      members: { connect: { id: req.user.id } }
+    },
     include: { creator: true, members: true }
   });
   res.status(201).json({ success: true, data: group });
@@ -509,7 +527,7 @@ export const getInvitableUsers = asyncHandler(async (req: AuthRequest, res: Resp
   const query = typeof req.query.query === 'string' ? req.query.query.trim() : '';
   const limit = Math.min(Number.parseInt(String(req.query.limit || '20'), 10) || 20, 50);
 
-  const where: any = {
+  const where: Record<string, unknown> = {
     status: 'ACTIVE',
     id: {
       notIn: [req.user.id, ...group.members.map((member) => member.id)]
