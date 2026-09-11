@@ -580,6 +580,14 @@ exports.toggleFeaturePost = (0, errorHandler_1.asyncHandler)(async (req, res) =>
         res.status(400).json({ success: false, message: 'Post ID is required' });
         return;
     }
+    if (!req.user) {
+        res.status(401).json({ success: false, message: 'Not authenticated' });
+        return;
+    }
+    if (!isAdminRole(req.user.role)) {
+        res.status(403).json({ success: false, message: 'Not authorized' });
+        return;
+    }
     const post = await prisma_1.default.post.findUnique({ where: { id: postId } });
     if (!post) {
         res.status(404).json({ success: false, message: 'Post not found' });
