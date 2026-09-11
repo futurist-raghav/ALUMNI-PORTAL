@@ -685,6 +685,17 @@ export const toggleFeaturePost = asyncHandler(async (req: AuthRequest, res: Resp
     return;
   }
 
+  // Defense-in-depth: Verify authentication and admin role privileges within controller
+  if (!req.user) {
+    res.status(401).json({ success: false, message: 'Not authenticated' });
+    return;
+  }
+
+  if (!isAdminRole(req.user.role)) {
+    res.status(403).json({ success: false, message: 'Not authorized' });
+    return;
+  }
+
   const post = await prisma.post.findUnique({ where: { id: postId } });
   if (!post) {
     res.status(404).json({ success: false, message: 'Post not found' });
