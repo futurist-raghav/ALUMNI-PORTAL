@@ -78,7 +78,7 @@ export const markNotificationSeen = async (req: AuthRequest, res: Response): Pro
       return;
     }
 
-    const { notificationId } = req.params;
+    const notificationId = String(req.params.notificationId || '');
 
     const { count: updatedCount } = await prisma.notification.updateMany({
       where: {
@@ -137,7 +137,7 @@ export const dismissNotification = async (req: AuthRequest, res: Response): Prom
       return;
     }
 
-    const { notificationId } = req.params;
+    const notificationId = String(req.params.notificationId || '');
 
     const { count: deletedCount } = await prisma.notification.deleteMany({
       where: {
