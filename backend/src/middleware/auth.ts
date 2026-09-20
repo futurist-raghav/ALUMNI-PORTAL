@@ -21,7 +21,11 @@ export const authMiddleware = async (req: AuthRequest, res: Response, next: Next
       return;
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key') as { userId: string };
+    const jwtSecret = process.env.JWT_SECRET;
+    if (!jwtSecret) {
+      throw new Error('JWT_SECRET environment variable is not configured');
+    }
+    const decoded = jwt.verify(token, jwtSecret) as { userId: string };
 
     const user = await prisma.user.findUnique({
       where: { id: decoded.userId },
