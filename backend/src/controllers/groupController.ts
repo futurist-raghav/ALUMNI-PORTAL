@@ -81,7 +81,13 @@ const normalizeInviteEmail = (email?: string) => {
   return email.trim().toLowerCase();
 };
 
-const getInviteTokenSecret = () => process.env.JWT_SECRET || 'your-secret-key';
+const getInviteTokenSecret = (): string => {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) {
+    throw new Error('JWT_SECRET environment variable is not configured');
+  }
+  return secret;
+};
 
 const getInviteLinkBaseUrl = () => {
   const raw = process.env.FRONTEND_URL || process.env.CLIENT_URL || 'http://localhost';

@@ -87,18 +87,34 @@ const REFRESH_TOKEN_EXPIRES_IN =
 const DEFAULT_REFRESH_COOKIE_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000;
 const REFRESH_COOKIE_MAX_AGE_MS = Number(process.env.JWT_REFRESH_COOKIE_MAX_AGE_MS) || DEFAULT_REFRESH_COOKIE_MAX_AGE_MS;
 
+const getJwtSecret = (): string => {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) {
+    throw new Error('JWT_SECRET environment variable is not configured');
+  }
+  return secret;
+};
+
+const getJwtRefreshSecret = (): string => {
+  const secret = process.env.JWT_REFRESH_SECRET;
+  if (!secret) {
+    throw new Error('JWT_REFRESH_SECRET environment variable is not configured');
+  }
+  return secret;
+};
+
 const generateTokens = (userId: string) => {
   const payload = { userId };
   
   const accessToken = jwt.sign(
     payload, 
-    process.env.JWT_SECRET || 'fallback_secret',
+    getJwtSecret(),
     { expiresIn: ACCESS_TOKEN_EXPIRES_IN as NonNullable<SignOptions['expiresIn']> }
   );
 
   const refreshToken = jwt.sign(
     payload,
-    process.env.JWT_REFRESH_SECRET || 'fallback_refresh_secret',
+    getJwtRefreshSecret(),
     { expiresIn: REFRESH_TOKEN_EXPIRES_IN as NonNullable<SignOptions['expiresIn']> }
   );
 
@@ -381,7 +397,7 @@ export const refreshToken = asyncHandler(async (req: Request, res: Response) => 
   try {
     const decoded = jwt.verify(
       token, 
-      process.env.JWT_REFRESH_SECRET || 'fallback_refresh_secret'
+      getJwtRefreshSecret()
     ) as any;
 
     const user = await prisma.user.findUnique({
