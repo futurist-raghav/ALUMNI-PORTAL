@@ -663,7 +663,7 @@ export const getUserById = asyncHandler(async (req: Request, res: Response) => {
   }
 
   const user = await prisma.user.findUnique({
-    where: { id },
+    where: { id: String(id) },
     select: {
       id: true,
       email: true,
@@ -763,7 +763,7 @@ export const getUserById = asyncHandler(async (req: Request, res: Response) => {
 });
 
 export const getUserProfile = asyncHandler(async (req: Request, res: Response) => {
-  const { id } = req.params;
+  const id = String(req.params.id || '');
   if (!id) {
     res.status(400).json({ success: false, message: 'User ID is required' });
     return;
@@ -823,9 +823,41 @@ export const updateProfile = asyncHandler(async (req: AuthRequest, res: Response
     return;
   }
 
+  // Prevent mass assignment by strictly whitelisting editable profile fields
+  const allowedFields = [
+    'name',
+    'firstName',
+    'lastName',
+    'bio',
+    'headline',
+    'city',
+    'country',
+    'company',
+    'jobTitle',
+    'contactEmail',
+    'contactPhone',
+    'linkedInProfile',
+    'location',
+    'isAvailableAsMentor',
+    'experiences',
+    'educations',
+    'skills',
+    'interests',
+    'profileImage',
+    'notificationSettings',
+    'privacySettings'
+  ];
+
+  const updateData: Record<string, unknown> = {};
+  for (const field of allowedFields) {
+    if (req.body && req.body[field] !== undefined) {
+      updateData[field] = req.body[field];
+    }
+  }
+
   const profile = await prisma.user.update({
-    where: { id },
-    data: { ...req.body }
+    where: { id: String(id) },
+    data: updateData as any
   });
 
   res.status(200).json({ success: true, data: serializeUser(profile) });
