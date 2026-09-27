@@ -8,8 +8,31 @@ interface AuthRequest extends Request {
 
 export const createReport = asyncHandler(async (req: AuthRequest, res: Response): Promise<void> => {
   if (!req.user?.id) { res.status(401).json({ message: 'Not authenticated' }); return; }
+
+  // Whitelist user-modifiable fields to prevent mass assignment of sensitive internal/admin properties
+  const {
+    type,
+    description,
+    reason,
+    reportedUserId,
+    reportedPostId,
+    reportedCommentId,
+    reportedGroupId,
+    reportedJobId
+  } = req.body || {};
+
   const report = await prisma.report.create({
-    data: { ...req.body, reportedById: req.user.id }
+    data: {
+      type: String(type || ''),
+      description: String(description || ''),
+      reason: String(reason || ''),
+      reportedUserId: reportedUserId ? String(reportedUserId) : null,
+      reportedPostId: reportedPostId ? String(reportedPostId) : null,
+      reportedCommentId: reportedCommentId ? String(reportedCommentId) : null,
+      reportedGroupId: reportedGroupId ? String(reportedGroupId) : null,
+      reportedJobId: reportedJobId ? String(reportedJobId) : null,
+      reportedById: req.user.id
+    }
   });
   res.status(201).json({ success: true, data: report });
 });
@@ -22,20 +45,21 @@ export const getReports = asyncHandler(async (req: Request, res: Response): Prom
 export const getAllReports = getReports;
 
 export const resolveReport = asyncHandler(async (req: AuthRequest, res: Response): Promise<void> => {
-  const updated = await prisma.report.update({ where: { id: req.params.id }, data: { status: 'RESOLVED', reviewedById: req.user?.id } });
+  const reportId = String(req.params.id || req.params.reportId || '');
+  const updated = await prisma.report.update({ where: { id: reportId }, data: { status: 'RESOLVED', reviewedById: req.user?.id } });
   res.status(200).json({ success: true, data: updated });
 });
 
 export const updateReportStatus = asyncHandler(async (req: AuthRequest, res: Response): Promise<void> => {
-  const { reportId } = req.params;
-  const { status, adminNotes } = req.body;
+  const reportId = String(req.params.reportId || req.params.id || '');
+  const { status, adminNotes } = req.body || {};
 
   const updated = await prisma.report.update({
     where: { id: reportId },
     data: {
       status: String(status || '').toUpperCase(),
       reviewedById: req.user?.id,
-      adminNotes: adminNotes || null
+      adminNotes: adminNotes ? String(adminNotes) : null
     }
   });
 
@@ -43,7 +67,7 @@ export const updateReportStatus = asyncHandler(async (req: AuthRequest, res: Res
 });
 
 export const deleteReport = asyncHandler(async (req: Request, res: Response): Promise<void> => {
-  const { reportId } = req.params;
+  const reportId = String(req.params.reportId || req.params.id || '');
   await prisma.report.delete({ where: { id: reportId } });
   res.status(200).json({ success: true, message: 'Report deleted' });
 });
