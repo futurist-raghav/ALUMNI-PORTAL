@@ -823,9 +823,40 @@ export const updateProfile = asyncHandler(async (req: AuthRequest, res: Response
     return;
   }
 
+  const allowedFields = [
+    'name',
+    'firstName',
+    'lastName',
+    'bio',
+    'headline',
+    'city',
+    'country',
+    'company',
+    'jobTitle',
+    'contactEmail',
+    'contactPhone',
+    'linkedInProfile',
+    'location',
+    'isAvailableAsMentor',
+    'experiences',
+    'educations',
+    'skills',
+    'interests',
+    'profileImage',
+    'notificationSettings',
+    'privacySettings'
+  ];
+
+  const updateData: Record<string, unknown> = {};
+  for (const field of allowedFields) {
+    if (req.body && req.body[field] !== undefined) {
+      updateData[field] = req.body[field];
+    }
+  }
+
   const profile = await prisma.user.update({
-    where: { id },
-    data: { ...req.body }
+    where: { id: String(id) },
+    data: updateData as any
   });
 
   res.status(200).json({ success: true, data: serializeUser(profile) });
@@ -1628,7 +1659,7 @@ export const getConnectionSuggestions = asyncHandler(async (req: AuthRequest, re
     return;
   }
 
-  const requestedLimit = Number.parseInt(req.query.limit as string) || 8;
+  const requestedLimit = Number.parseInt(String(req.query.limit || '')) || 8;
   const limit = Math.min(Math.max(requestedLimit, 1), 20);
 
   const currentUser = await prisma.user.findUnique({
