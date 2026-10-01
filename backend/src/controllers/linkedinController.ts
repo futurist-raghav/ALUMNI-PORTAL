@@ -64,7 +64,13 @@ const setOAuthStatus = (userId: string, status: Omit<LinkedInOAuthImportStatus, 
   });
 };
 
-const getJwtSecret = () => process.env.JWT_SECRET || 'linkedin-oauth-fallback-secret';
+const getJwtSecret = (): string => {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) {
+    throw new Error('JWT_SECRET is not configured in environment variables');
+  }
+  return secret;
+};
 
 const normalizeLinkedInProfileUrl = (input?: string | null): string | undefined => {
   if (!input || typeof input !== 'string') return undefined;

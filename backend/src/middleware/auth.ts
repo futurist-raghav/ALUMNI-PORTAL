@@ -8,6 +8,14 @@ export interface AuthRequest extends Request {
   user?: IUser;
 }
 
+const getJwtSecret = (): string => {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) {
+    throw new Error('JWT_SECRET is not configured in environment variables');
+  }
+  return secret;
+};
+
 export const authMiddleware = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
     const token = req.header('Authorization')?.replace('Bearer ', '');
@@ -21,7 +29,7 @@ export const authMiddleware = async (req: AuthRequest, res: Response, next: Next
       return;
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key') as { userId: string };
+    const decoded = jwt.verify(token, getJwtSecret()) as { userId: string };
 
     const user = await prisma.user.findUnique({
       where: { id: decoded.userId },
