@@ -806,6 +806,30 @@ export const getUserProfile = asyncHandler(async (req: Request, res: Response) =
   res.status(200).json({ success: true, data: profileData });
 });
 
+const ALLOWED_PROFILE_FIELDS = [
+  'name',
+  'firstName',
+  'lastName',
+  'bio',
+  'headline',
+  'city',
+  'country',
+  'company',
+  'jobTitle',
+  'contactEmail',
+  'contactPhone',
+  'linkedInProfile',
+  'location',
+  'isAvailableAsMentor',
+  'experiences',
+  'educations',
+  'skills',
+  'interests',
+  'profileImage',
+  'notificationSettings',
+  'privacySettings'
+] as const;
+
 export const updateProfile = asyncHandler(async (req: AuthRequest, res: Response) => {
   if (!req.user) {
     res.status(401).json({ success: false, message: 'Not authenticated' });
@@ -823,9 +847,17 @@ export const updateProfile = asyncHandler(async (req: AuthRequest, res: Response
     return;
   }
 
+  // Security: Whitelist allowed profile fields to prevent mass assignment vulnerabilities
+  const updateData: Record<string, unknown> = {};
+  for (const field of ALLOWED_PROFILE_FIELDS) {
+    if (req.body && field in req.body) {
+      updateData[field] = req.body[field];
+    }
+  }
+
   const profile = await prisma.user.update({
-    where: { id },
-    data: { ...req.body }
+    where: { id: String(id) },
+    data: updateData
   });
 
   res.status(200).json({ success: true, data: serializeUser(profile) });
