@@ -27,7 +27,7 @@ export const createNotification = async ({
         message,
         type,
         actionUrl: actionUrl ?? null,
-        metadata: metadata ?? undefined
+        metadata: (metadata as any) ?? undefined
       }
     });
 
